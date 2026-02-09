@@ -66,15 +66,19 @@ const VerticalMenu = ({ scrollMenu }: { scrollMenu: (container: any, isPerfectSc
           </MenuItem>
         </MenuSection>
         <MenuSection label='Apps & Pages'>
-           <MenuItem href='/users' icon={<i className='ri-group-line' />}>
-            Users
-          </MenuItem>
           <MenuItem href='/properties' icon={<i className='ri-building-line' />}>
             Properties
           </MenuItem>
-          
           <MenuItem href='/jobs' icon={<i className='ri-briefcase-line' />}>
             Jobs
+          </MenuItem>
+          
+          <MenuItem href='/users' icon={<i className='ri-group-line' />}>
+            Users
+          </MenuItem>
+
+          <MenuItem href='/jobs/applications/my' icon={<i className='ri-file-user-line' />}>
+            My Applications
           </MenuItem>
          
           <MenuItem href='/card-basic' icon={<i className='ri-bar-chart-box-line' />}>

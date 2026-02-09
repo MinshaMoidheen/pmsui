@@ -129,6 +129,65 @@ export interface applyJobResponse {
   },
 }
 
+export type ApplicationStatus = 'PENDING' | 'SHORTLISTED' | 'REJECTED' | 'ACCEPTED'
+
+export interface IJobApplication {
+  _id: string
+  jobPost: {
+    _id: string
+    title: string
+    companyName?: string
+  } | string
+  applicant: {
+    _id: string
+    profile?: {
+      firstName?: string
+      lastName?: string
+    }
+    mobileNumber?: string
+  } | string
+  createdBy: string
+  updatedBy?: string
+  status: ApplicationStatus
+  coverLetter?: string
+  appliedAt: string
+  reviewedAt?: string
+  reviewedBy?: {
+    _id: string
+    profile?: {
+      firstName?: string
+      lastName?: string
+    }
+  } | string
+  notes?: string
+}
+
+export interface GetApplicationsResponse {
+  success: boolean
+  message: string
+  data: {
+    applications: IJobApplication[]
+    pagination: {
+      page: number
+      limit: number
+      total: number
+      pages: number
+    }
+  }
+}
+
+export interface UpdateApplicationStatusRequest {
+  status: ApplicationStatus
+  notes?: string
+}
+
+export interface CreateApplicationRequest {
+  id: string
+  coverLetter?: string
+  notes?: string
+  applicantId?: string
+}
+
 // Employer access request types
 export interface EmployerRequestContact {
   name: string

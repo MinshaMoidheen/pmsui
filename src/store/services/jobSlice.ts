@@ -8,7 +8,10 @@ import {
   getJobByIdResponse,
   getJobsResponse,
   RequestEmployerAccessRequest,
-  RequestEmployerAccessResponse
+  RequestEmployerAccessResponse,
+  GetApplicationsResponse,
+  UpdateApplicationStatusRequest,
+  CreateApplicationRequest
 } from '@/types/job'
 
 export interface GetJobsParams {
@@ -76,11 +79,25 @@ const jobsApiSlice = apiSlice.injectEndpoints({
       invalidatesTags: (_, __, id) => [{ type: 'Jobs', id }, { type: 'Jobs', id: 'LIST' }]
     }),
 
-    applyJob: builder.mutation<applyJobResponse, { id: string}>({
-      query: id => ({
-        url: `${JOBS_URL}/${id}/apply`,
-        method: "POST",
-      }),
+    applyJob: builder.mutation<applyJobResponse, CreateApplicationRequest>({
+      query: ({ id, coverLetter, notes, applicantId }) => {
+        const body: { coverLetter?: string; notes?: string; applicantId?: string } = {}
+        if (coverLetter && coverLetter.trim()) {
+          body.coverLetter = coverLetter.trim()
+        }
+        if (notes && notes.trim()) {
+          body.notes = notes.trim()
+        }
+        if (applicantId && applicantId.trim()) {
+          body.applicantId = applicantId.trim()
+        }
+
+        return {
+          url: `${JOBS_URL}/${id}/apply`,
+          method: 'POST',
+          body
+        }
+      },
       invalidatesTags: [{type: 'Jobs', id: 'LIST'}]
     }),
 
@@ -90,6 +107,49 @@ const jobsApiSlice = apiSlice.injectEndpoints({
         method: 'POST',
         body
       })
+    }),
+
+    getJobApplications: builder.query<GetApplicationsResponse, { jobId: string; status?: string; page?: number; limit?: number }>({
+      query: ({ jobId, status, page = 1, limit = 10 }) => ({
+        url: `${JOBS_URL}/${jobId}/applications`,
+        method: 'GET',
+        params: { status, page, limit }
+      }),
+      providesTags: result =>
+        result?.data?.applications
+          ? [
+              ...result.data.applications.map(({ _id }) => ({ type: 'Jobs' as const, id: `app-${_id}` })),
+              { type: 'Jobs', id: 'APPLICATIONS' }
+            ]
+          : [{ type: 'Jobs', id: 'APPLICATIONS' }]
+    }),
+
+    getMyJobApplications: builder.query<GetApplicationsResponse, { status?: string; page?: number; limit?: number } | void>({
+      query: params => {
+        const p = params ?? {}
+        const { status, page = 1, limit = 10 } = p
+        return {
+          url: `${JOBS_URL}/applications/my`,
+          method: 'GET',
+          params: { status, page, limit }
+        }
+      },
+      providesTags: result =>
+        result?.data?.applications
+          ? [
+              ...result.data.applications.map(({ _id }) => ({ type: 'Jobs' as const, id: `my-app-${_id}` })),
+              { type: 'Jobs', id: 'MY_APPLICATIONS' }
+            ]
+          : [{ type: 'Jobs', id: 'MY_APPLICATIONS' }]
+    }),
+
+    updateApplicationStatus: builder.mutation<GetApplicationsResponse['data']['applications'][number], { id: string; data: UpdateApplicationStatusRequest }>({
+      query: ({ id, data }) => ({
+        url: `${JOBS_URL}/applications/${id}/status`,
+        method: 'PUT',
+        body: data
+      }),
+      invalidatesTags: [{ type: 'Jobs', id: 'APPLICATIONS' }, { type: 'Jobs', id: 'MY_APPLICATIONS' }]
     }),
 
 
@@ -123,5 +183,8 @@ export const {
   useUpdateJobPostMutation,
   useDeleteJobPostMutation,
   useApplyJobMutation,
-  useRequestEmployerAccessMutation
+  useRequestEmployerAccessMutation,
+  useGetJobApplicationsQuery,
+  useGetMyJobApplicationsQuery,
+  useUpdateApplicationStatusMutation
 } = jobsApiSlice
