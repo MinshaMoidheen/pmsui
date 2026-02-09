@@ -92,15 +92,16 @@ export interface createJobPostRequest {
     email?: string;
     whatsappNumber: string;
   };
-  postedBy: string; // Employer (User with BROKER or SUPER_ADMIN role)
-  createdBy: string; // User who created
+  // The following fields are managed by the backend and are optional on the client
+  postedBy?: string; // Employer (User with BROKER or SUPER_ADMIN role)
+  createdBy?: string; // User who created
   updatedBy?: string; // User who last updated
-  status: JobStatus;
+  status?: JobStatus;
   approvedBy?: string; // Admin who approved
   approvedAt?: Date;
   rejectionReason?: string;
-  views: number;
-  applicationCount: number;
+  views?: number;
+  applicationCount?: number;
 }
 
 export interface createJobPostResponse {
@@ -127,3 +128,43 @@ export interface applyJobResponse {
     },
   },
 }
+
+// Employer access request types
+export interface EmployerRequestContact {
+  name: string
+  mobileNumber: string
+  email?: string
+  whatsappNumber: string
+}
+
+export interface EmployerRequestAddress {
+  street?: string
+  city?: string
+  state?: string
+  pincode?: string
+}
+
+export interface RequestEmployerAccessRequest {
+  companyName: string
+  companyDescription?: string
+  contact: EmployerRequestContact
+  address?: EmployerRequestAddress
+  documents?: string[]
+}
+
+export interface RequestEmployerAccessResponse {
+  success: boolean
+  message: string
+}
+
+// Option lists for UI
+export const EMPLOYMENT_TYPE_OPTIONS: { value: EmploymentType; label: string }[] = [
+  { value: 'FULL_TIME', label: 'Full Time' },
+  { value: 'PART_TIME', label: 'Part Time' },
+  { value: 'CONTRACT', label: 'Contract' },
+  { value: 'FREELANCE', label: 'Freelance' },
+  { value: 'INTERNSHIP', label: 'Internship' }
+]
+
+// Note: status is handled internally by the backend; the frontend
+// does not expose status filters or controls in the UI.

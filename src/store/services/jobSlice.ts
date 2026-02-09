@@ -1,12 +1,20 @@
 import { apiSlice } from './apiSlice'
 import { JOBS_URL } from '../constants'
-import { applyJobResponse, createJobPostRequest, createJobPostResponse, EmploymentType, getJobByIdResponse, getJobsResponse, JobStatus } from '@/types/job'
+import {
+  applyJobResponse,
+  createJobPostRequest,
+  createJobPostResponse,
+  EmploymentType,
+  getJobByIdResponse,
+  getJobsResponse,
+  RequestEmployerAccessRequest,
+  RequestEmployerAccessResponse
+} from '@/types/job'
 
 export interface GetJobsParams {
   city?: string 
   state?: string
   employmentType?: EmploymentType
-  status?: JobStatus
   search?: string
   page?: number
   limit?: number
@@ -18,11 +26,11 @@ const jobsApiSlice = apiSlice.injectEndpoints({
     getJobPosts: builder.query<getJobsResponse, GetJobsParams | void>({
       query: (params) => {
         const p: GetJobsParams = params ?? {}
-        const { city,state, employmentType, status, search, page = 1, limit = 10 } = p
+        const { city,state, employmentType, search, page = 1, limit = 10 } = p
         return {
           url: `${JOBS_URL}`,
           method: 'GET',
-          params: { city,state, employmentType, status, search, page, limit }
+          params: { city,state, employmentType, search, page, limit }
         }
       },
       providesTags: result =>
@@ -76,6 +84,14 @@ const jobsApiSlice = apiSlice.injectEndpoints({
       invalidatesTags: [{type: 'Jobs', id: 'LIST'}]
     }),
 
+    requestEmployerAccess: builder.mutation<RequestEmployerAccessResponse, RequestEmployerAccessRequest>({
+      query: body => ({
+        url: `${JOBS_URL}/employer/request`,
+        method: 'POST',
+        body
+      })
+    }),
+
 
 
 // router.get('/:jobId/applications', authenticate, validateRequest(GetApplicationsQuerySchema), getApplications);
@@ -100,6 +116,12 @@ const jobsApiSlice = apiSlice.injectEndpoints({
   })
 })
 
-export const { 
-
- } = jobsApiSlice
+export const {
+  useGetJobPostsQuery,
+  useGetJobByIdQuery,
+  useCreateJobPostMutation,
+  useUpdateJobPostMutation,
+  useDeleteJobPostMutation,
+  useApplyJobMutation,
+  useRequestEmployerAccessMutation
+} = jobsApiSlice

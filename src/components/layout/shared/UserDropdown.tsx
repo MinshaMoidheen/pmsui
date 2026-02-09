@@ -26,6 +26,7 @@ import { useAuth } from '@/contexts/AuthContext'
 
 // Store Imports
 import { useLogoutMutation } from '@/store/services/authApiSlice'
+import { useRequestEmployerAccessMutation } from '@/store/services/jobSlice'
 
 // Styled component for badge content
 const BadgeContentSpan = styled('span')({
@@ -48,6 +49,7 @@ const UserDropdown = () => {
   const router = useRouter()
   const { user, logout } = useAuth()
   const [logoutMutation] = useLogoutMutation()
+  const [requestEmployerAccess, { isLoading: isRequestingEmployerAccess }] = useRequestEmployerAccessMutation()
 
   const handleDropdownOpen = () => {
     !open ? setOpen(true) : setOpen(false)
@@ -73,6 +75,59 @@ const UserDropdown = () => {
       // Ignore errors - we'll clear local state anyway
     }
     logout()
+  }
+
+  const handleRequestEmployerAccess = async () => {
+    if (!user) return
+
+    const companyName = typeof window !== 'undefined'
+      ? window.prompt('Enter your company name to request employer access:')
+      : null
+
+    if (!companyName) {
+      return
+    }
+
+    try {
+      await requestEmployerAccess({
+        companyName,
+        contact: {
+          name: displayName,
+          mobileNumber: user.mobileNumber,
+          whatsappNumber: user.mobileNumber
+        }
+      }).unwrap()
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: {
+              title: 'Request submitted',
+              description: 'Your employer access request has been submitted.',
+              variant: 'default'
+            }
+          })
+        )
+      }
+    } catch (error: any) {
+      if (typeof window !== 'undefined') {
+        const errorMessage =
+          (error?.data && (error.data as { message?: string }).message) ||
+          'Failed to submit employer access request.'
+
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: {
+              title: 'Request failed',
+              description: errorMessage,
+              variant: 'destructive'
+            }
+          })
+        )
+      }
+    } finally {
+      setOpen(false)
+    }
   }
 
   const displayName = user?.profile
@@ -130,6 +185,14 @@ const UserDropdown = () => {
                     </div>
                   </div>
                   <Divider className='mlb-1' />
+                  {user?.role === 'USER' && (
+                    <MenuItem className='gap-3' onClick={handleRequestEmployerAccess} disabled={isRequestingEmployerAccess}>
+                      <i className='ri-briefcase-line' />
+                      <Typography color='text.primary'>
+                        {isRequestingEmployerAccess ? 'Submitting...' : 'Apply for Employer'}
+                      </Typography>
+                    </MenuItem>
+                  )}
                   <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/account-settings')}>
                     <i className='ri-user-3-line' />
                     <Typography color='text.primary'>My Profile</Typography>
