@@ -13,6 +13,7 @@ import {
   UpdateApplicationStatusRequest,
   CreateApplicationRequest
 } from '@/types/job'
+import { createInterviewScheduleRequest, createInterViewScheduleResponse, getInterviewByIdResponse, GetInterviewsResponse, InterviewStatus } from '@/types/interviewSchedule'
 
 export interface GetJobsParams {
   city?: string 
@@ -21,6 +22,14 @@ export interface GetJobsParams {
   search?: string
   page?: number
   limit?: number
+}
+
+export interface GetInterViewParams {
+  jobId?: string;
+  applicantId?: string;
+  status?: InterviewStatus;
+  page?: number;
+  limit?: number;
 }
 
 const jobsApiSlice = apiSlice.injectEndpoints({
@@ -152,26 +161,53 @@ const jobsApiSlice = apiSlice.injectEndpoints({
       invalidatesTags: [{ type: 'Jobs', id: 'APPLICATIONS' }, { type: 'Jobs', id: 'MY_APPLICATIONS' }]
     }),
 
+    createInterviewSchedule: builder.mutation<createInterViewScheduleResponse, createInterviewScheduleRequest>({
+      query: data => ({
+        url: `${JOBS_URL}/interview/schedule`,
+        method: "POST",
+        body: data
+      }),
+      invalidatesTags: [{type: 'InterviewSchedules', id: 'LIST'}]
+    }),
 
+    getInterviews: builder.query<GetInterviewsResponse, GetInterViewParams | void>({
+      query: params => {
+        const p: GetInterViewParams = params ?? {}
+        const { jobId, applicantId, status, page = 1, limit = 20 } = p
+        return {
+          url: `${JOBS_URL}/interviews`,
+          method: 'GET',
+          params: { jobId, applicantId, status, page, limit }
+        }
+      },
+      providesTags: result =>
+        result?.data?.interviews ? [...result.data.interviews.map(({ _id }) => ({ type: 'InterviewSchedules' as const, id: _id })), { type: 'InterviewSchedules', id: 'LIST' }] : [{ type: 'InterviewSchedules', id: 'LIST' }]
+    }),
 
-// router.get('/:jobId/applications', authenticate, validateRequest(GetApplicationsQuerySchema), getApplications);
-// router.put('/applications/:id/status', authenticate, validateRequest(UpdateApplicationStatusSchema), updateApplicationStatus);
+    getInterviewById: builder.query<getInterviewByIdResponse, string>({
+      query: id => ({
+        url: `${JOBS_URL}/interviews/${id}`,
+        method: 'GET'
+      }),
+      providesTags: (_, __, id) => [{ type: 'InterviewSchedules', id }]
+    }),
 
+    updateInterview: builder.mutation<createInterViewScheduleResponse, { id: string; data: createInterviewScheduleRequest }>({
+      query: ({ id, data }) => ({
+        url: `${JOBS_URL}/interviews/${id}`,
+        method: 'PUT',
+        body: data
+      }),
+      invalidatesTags: (_, __, { id }) => [{ type: 'InterviewSchedules', id }, { type: 'InterviewSchedules', id: 'LIST' }]
+    }),
 
-// router.post('/interview/schedule', authenticate, requireSuperAdmin, validateRequest(CreateInterviewScheduleSchema), createInterviewSchedule);
-
-
-// router.get('/interviews', authenticate, validateRequest(GetInterviewsQuerySchema), getInterviews);
-
-
-// router.get('/interviews/:id', authenticate, getInterviewById);
-
-
-// router.put('/interviews/:id', authenticate, requireSuperAdmin, validateRequest(UpdateInterviewSchema), updateInterview);
-
-
-// router.patch('/interviews/:id/delete', authenticate, requireSuperAdmin, deleteInterview);
-
+    deleteInterview: builder.mutation<{ success: boolean; message: string }, string>({
+      query: id => ({
+        url: `${JOBS_URL}/interviews/${id}/delete`,
+        method: 'PATCH'
+      }),
+      invalidatesTags: (_, __, id) => [{ type: 'InterviewSchedules', id }, { type: 'InterviewSchedules', id: 'LIST' }]
+    }),
    
   })
 })
@@ -186,5 +222,10 @@ export const {
   useRequestEmployerAccessMutation,
   useGetJobApplicationsQuery,
   useGetMyJobApplicationsQuery,
-  useUpdateApplicationStatusMutation
+  useUpdateApplicationStatusMutation,
+  useCreateInterviewScheduleMutation,
+  useGetInterviewsQuery,
+  useGetInterviewByIdQuery,
+  useUpdateInterviewMutation,
+  useDeleteInterviewMutation,
 } = jobsApiSlice
