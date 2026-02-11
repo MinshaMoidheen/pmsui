@@ -36,14 +36,13 @@ import {
     useDeleteInterviewMutation,
     type GetInterViewParams,
     useGetJobPostsQuery,
-    useGetJobApplicationsQuery,
 } from "@/store/services/jobSlice"
 
 // Type Imports
 import type { IInterviewSchedule, InterviewStatus } from "@/types/interviewSchedule"
 import { INTERVIEW_STATUS, INTERVIEW_TYPES } from "@/types/interviewSchedule"
-import JobsPage from "@/app/(dashboard)/jobs/page"
-import { IJobApplication } from "@/types/job"
+import { IUser } from "@/types/users"
+import { useGetUsersQuery } from "@/store/services/usersApiSlice"
 
 const InterviewList = () => {
     const [page, setPage] = useState(0)
@@ -86,17 +85,8 @@ const InterviewList = () => {
 
     const jobs = jobData?.data?.jobs ?? []
 
-    const { data: applicationData } = useGetJobApplicationsQuery({
-        jobId: jobId ?? '',
-        page: 1,
-        limit: 10,
-    },
-        {
-            skip: !jobId
-        }
-    )
-
-    const applications = applicationData?.data?.applications ?? []
+    const { data: usersData } = useGetUsersQuery({ page: 1, limit: 50 })
+    const users: IUser[] = usersData?.data?.users ?? []
 
     const getStatusLabel = (st: InterviewStatus) => INTERVIEW_STATUS.find(s => s.value === st)?.label ?? st
 
@@ -149,21 +139,21 @@ const InterviewList = () => {
                         value={applicantId ?? ''}
                         onChange={e => setApplicantId((e.target.value || undefined) as GetInterViewParams['applicantId'])}
                         sx={{ minWidth: 180 }}
-                        disabled={!jobId}
+                       
                     >
                         <MenuItem value=''>All</MenuItem>
-                        {applications.map((app: IJobApplication) => {
+                        {users.map((u: IUser) => {
                             const applicant =
-                                typeof app.applicant === 'string' ? undefined : app.applicant
-                            const firstName = applicant?.profile?.firstName ?? ''
-                            const lastName = applicant?.profile?.lastName ?? ''
+                                typeof u._id === 'string' ? undefined : u._id
+                            const firstName = u.profile?.firstName ?? ''
+                            const lastName = u.profile?.lastName ?? ''
                             const label =
                                 (firstName || lastName)
                                     ? `${firstName} ${lastName}`.trim()
                                     : 'Unnamed Applicant'
 
                             return (
-                                <MenuItem key={app._id} value={app._id}>
+                                <MenuItem key={u._id} value={u._id}>
                                     {label}
                                 </MenuItem>
                             )
@@ -210,21 +200,15 @@ const InterviewList = () => {
                                                 : interview.jobPost
                                         const jobTitle = jobPost?.title ?? 'N/A'
 
-                                        const applicantData =
+                                        const applicant =
                                             typeof interview.applicant === 'string'
                                                 ? undefined
-                                                : interview.applicant
-                                        const applicant =
-                                            applicantData && typeof applicantData.applicant !== 'string'
-                                                ? applicantData.applicant
-                                                : undefined
-                                        const firstName = applicant?.profile?.firstName ?? ''
-                                        const lastName = applicant?.profile?.lastName ?? ''
+                                                : interview.applicant as IUser
                                         const applicantName =
-                                            (firstName || lastName)
-                                                ? `${firstName} ${lastName}`.trim()
+                                            (applicant?.profile?.firstName || applicant?.profile?.lastName)
+                                                ? `${applicant?.profile?.firstName} ${applicant?.profile?.lastName}`.trim()
                                                 : 'Unnamed Applicant'
-
+                                                
                                         return (
                                             <TableRow key={interview._id} hover>
                                                 <TableCell>{jobTitle}</TableCell>

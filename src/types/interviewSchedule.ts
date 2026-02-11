@@ -1,4 +1,5 @@
 import { IJobApplication, IJobPost } from "./job";
+import { IUser } from "./users";
 
 export type InterviewStatus = 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'RESCHEDULED';
 export type InterviewType = 'IN_PERSON' | 'VIDEO_CALL' | 'PHONE_CALL';
@@ -19,7 +20,7 @@ export const INTERVIEW_TYPES: { value: InterviewType; label: string }[] = [
 export interface IInterviewSchedule {
     _id: string;
   jobPost: IJobPost | string;
-  applicant: IJobApplication | string;
+  applicant: IUser | string;
   scheduledBy: string; // Admin who scheduled
   createdBy: string; // User who created
   updatedBy?: string; // User who last updated

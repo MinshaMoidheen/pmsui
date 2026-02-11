@@ -28,8 +28,8 @@ import {
     useUpdateInterviewMutation,
     useGetInterviewByIdQuery,
     useGetJobPostsQuery,
-    useGetJobApplicationsQuery,
 } from '@/store/services/jobSlice'
+import { useGetUsersQuery } from '@/store/services/usersApiSlice'
 
 import type { IJobPost, IJobApplication } from '@/types/job'
 import type { createInterviewScheduleRequest, InterviewStatus, InterviewType } from '@/types/interviewSchedule'
@@ -38,6 +38,7 @@ import { INTERVIEW_STATUS, INTERVIEW_TYPES } from '@/types/interviewSchedule'
 // Schema Imports
 import { interviewScheduleFormSchema } from '@/schemas/interviewSchema'
 import { Checkbox, FormControlLabel } from '@mui/material'
+import { IUser } from '@/types/users'
 
 const defaultFormValues: createInterviewScheduleRequest = {
     jobPostId: '',
@@ -89,18 +90,8 @@ const InterviewScheduleForm = ({ id }: InterviewScheduleFormProps) => {
     })
     const jobs: IJobPost[] = jobData?.data?.jobs ?? []
 
-    // Applications for selected job
-    const { data: applicationData } = useGetJobApplicationsQuery(
-        {
-            jobId: formData.jobPostId,
-            page: 1,
-            limit: 100,
-        },
-        {
-            skip: !formData.jobPostId,
-        }
-    )
-    const applications: IJobApplication[] = applicationData?.data?.applications ?? []
+    const { data: usersData } = useGetUsersQuery({ page: 1, limit: 50 })
+    const users: IUser[] = usersData?.data?.users ?? []
 
     const isLoading = isCreating || isUpdating
 
@@ -115,7 +106,7 @@ const InterviewScheduleForm = ({ id }: InterviewScheduleFormProps) => {
             const applicantId =
                 typeof p.applicant === 'string'
                     ? p.applicant
-                    : (p.applicant as IJobApplication | undefined)?._id || ''
+                    : (p.applicant as IUser | undefined)?._id || ''
 
             setFormData({
                 jobPostId,
@@ -258,7 +249,7 @@ const InterviewScheduleForm = ({ id }: InterviewScheduleFormProps) => {
                             <Grid item xs={12} sm={6}>
                                 <TextField
                                     fullWidth
-                                    select
+                                    select={!!users.length}
                                     label="Applicant"
                                     value={formData.applicantId}
                                     onChange={e => updateField('applicantId', e.target.value)}
@@ -266,27 +257,14 @@ const InterviewScheduleForm = ({ id }: InterviewScheduleFormProps) => {
                                     helperText={fieldErrors.applicantId}
                                     required
                                     sx={inputSx}
-                                    disabled={!formData.jobPostId}
+
                                 >
                                     <MenuItem value="">Select Applicant</MenuItem>
-                                    {applications.map(app => {
-                                        const applicant =
-                                            typeof app.applicant === 'string'
-                                                ? undefined
-                                                : app.applicant
-                                        const firstName = applicant?.profile?.firstName ?? ''
-                                        const lastName = applicant?.profile?.lastName ?? ''
-                                        const label =
-                                            (firstName || lastName)
-                                                ? `${firstName} ${lastName}`.trim()
-                                                : 'Unnamed Applicant'
-
-                                        return (
-                                            <MenuItem key={app._id} value={app._id}>
-                                                {label}
-                                            </MenuItem>
-                                        )
-                                    })}
+                                    {users.map((u: IUser) => (
+                                        <MenuItem key={u._id} value={u._id}>
+                                            {[u.profile?.firstName, u.profile?.lastName].filter(Boolean).join(' ') || u.mobileNumber || u._id}
+                                        </MenuItem>
+                                    ))}
                                 </TextField>
                             </Grid>
                             <Grid item xs={12} sm={6}>
@@ -304,7 +282,7 @@ const InterviewScheduleForm = ({ id }: InterviewScheduleFormProps) => {
                                     {INTERVIEW_TYPES.map(type => (
                                         <MenuItem key={type.value} value={type.value}>
                                             {type.label}
-                                        </MenuItem> 
+                                        </MenuItem>
                                     ))}
                                 </TextField>
                             </Grid>
