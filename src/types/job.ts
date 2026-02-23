@@ -29,20 +29,18 @@ export interface IJobPost {
   postedBy: string; // Employer (User with BROKER or SUPER_ADMIN role)
   createdBy: string; // User who created
   updatedBy?: string; // User who last updated
-  status: JobStatus;
-  approvedBy?: string; // Admin who approved
-  approvedAt?: Date;
-  rejectionReason?: string;
   views: number;
+  applicants: string[]; // Array of user IDs who applied
   applicationCount: number;
+  bookmarks: string[]; // Array of user IDs who bookmarked
   isDeleted: {
     status: boolean;
     deletedBy?: string;
     deletedAt?: Date;
   };
   expiresAt?: Date;
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 

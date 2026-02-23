@@ -28,20 +28,38 @@ export const propertyFormSchema = z.object({
     address: z.string().max(500).optional().default(''),
     city: z.string().max(100).optional().default(''),
     state: z.string().max(100).optional().default(''),
-    pincode: z.string().max(10).optional().default('')
+    pincode: z.string().max(10).optional().default(''),
+    coordinates: z
+      .object({
+        latitude: z.coerce.number().optional().default(0),
+        longitude: z.coerce.number().optional().default(0)
+      })
+      .optional()
   }),
   price: z.coerce.number().min(0, 'Price must be 0 or greater'),
-  priceUnit: z.string().optional().default('INR'),
+  priceUnit: z.string().optional().default(''),
   area: z.object({
     value: z.coerce.number().min(0, 'Area must be 0 or greater'),
     unit: z.enum(areaUnitValues)
   }),
   flexibleFields: z.record(z.string(), z.unknown()).optional().default({}),
+  amenities: z.array(z.string()).default([]),
+  validatedInfo: z
+    .array(
+      z.object({
+        label: z.string(),
+        value: z.string().optional().default('')
+      })
+    )
+    .default([]),
   images: z.array(imageUrlSchema).default([]),
   contact: z.object({
     name: z.string().min(1, 'Contact name is required').max(100),
     mobileNumber: z.string().min(10, 'Valid mobile number required').max(15),
-    email: z.union([z.string().email('Invalid email'), z.literal('')]).optional().default(''),
+    email: z
+      .union([z.string().email('Invalid email'), z.literal('')])
+      .optional()
+      .default(''),
     whatsappNumber: z.string().min(10, 'Valid WhatsApp number required').max(15)
   })
 })

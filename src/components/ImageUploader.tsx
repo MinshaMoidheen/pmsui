@@ -20,7 +20,9 @@ const fileToBase64 = (file: File): Promise<string> =>
     reader.readAsDataURL(file)
   })
 
-const UploadZone = styled(Box)<{ $isDragOver?: boolean }>(({ theme, $isDragOver }) => ({
+const UploadZone = styled(Box, {
+  shouldForwardProp: prop => prop !== '$isDragOver'
+})<{ $isDragOver?: boolean }>(({ theme, $isDragOver }) => ({
   border: `2px dashed ${$isDragOver ? theme.palette.primary.main : theme.palette.divider}`,
   borderRadius: theme.shape.borderRadius,
   padding: theme.spacing(2, 3),
