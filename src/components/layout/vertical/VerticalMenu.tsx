@@ -89,9 +89,13 @@ const VerticalMenu = ({ scrollMenu }: { scrollMenu: (container: any, isPerfectSc
             Users
           </MenuItem>
 
+          <MenuItem href='/adsRequests' icon={<i className='ri-advertisement-line' />}>
+            Ads Request
+          </MenuItem>
+
           
          
-          <MenuItem href='/card-basic' icon={<i className='ri-bar-chart-box-line' />}>
+          {/* <MenuItem href='/card-basic' icon={<i className='ri-bar-chart-box-line' />}>
             Cards
           </MenuItem>
           <SubMenu label='Auth Pages' icon={<i className='ri-shield-keyhole-line' />}>
@@ -102,13 +106,13 @@ const VerticalMenu = ({ scrollMenu }: { scrollMenu: (container: any, isPerfectSc
           <SubMenu label='Miscellaneous' icon={<i className='ri-question-line' />}>
             <MenuItem href='/error'>Error</MenuItem>
             <MenuItem href='/under-maintenance'>Under Maintenance</MenuItem>
-          </SubMenu>
+          </SubMenu> */}
         </MenuSection>
-        <MenuSection label='Forms & Tables'>
+        {/* <MenuSection label='Forms & Tables'>
           <MenuItem href='/form-layouts' icon={<i className='ri-layout-4-line' />}>
             Form Layouts
           </MenuItem>
-        </MenuSection>
+        </MenuSection> */}
       </Menu>
     </ScrollWrapper>
   )
