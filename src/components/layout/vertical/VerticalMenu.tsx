@@ -92,6 +92,9 @@ const VerticalMenu = ({ scrollMenu }: { scrollMenu: (container: any, isPerfectSc
           <MenuItem href='/adsRequests' icon={<i className='ri-advertisement-line' />}>
             Ads Request
           </MenuItem>
+          <MenuItem href='/reviews' icon={<i className='ri-star-line' />}>
+            Reviews
+          </MenuItem>
 
           
          
