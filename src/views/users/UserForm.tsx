@@ -20,6 +20,8 @@ import MenuItem from '@mui/material/MenuItem'
 import Typography from '@mui/material/Typography'
 import Divider from '@mui/material/Divider'
 import Box from '@mui/material/Box'
+import Autocomplete from '@mui/material/Autocomplete'
+import Chip from '@mui/material/Chip'
 
 // Store Imports
 import { useGetUserByIdQuery, useUpdateUserMutation } from '@/store/services/usersApiSlice'
@@ -66,7 +68,10 @@ const UserForm = ({ id }: UserFormProps) => {
         profile: {
           firstName: user.profile?.firstName ?? '',
           lastName: user.profile?.lastName ?? '',
-          profilePicture: user.profile?.profilePicture
+          profilePicture: user.profile?.profilePicture,
+          bio: user.profile?.bio ?? '',
+          serviceAreas: user.profile?.serviceAreas ?? [],
+          specialties: user.profile?.specialties ?? []
         }
       })
     }
@@ -77,12 +82,22 @@ const UserForm = ({ id }: UserFormProps) => {
     setError('')
 
     try {
-      await updateUser({ id, data: formData }).unwrap()
+      const payload: UpdateUserRequest = {
+        role: formData.role,
+        isActive: formData.isActive,
+        profile: {
+          ...formData.profile,
+          bio: formData.role === 'BROKER' ? formData.profile?.bio?.trim() || undefined : undefined,
+          serviceAreas: formData.role === 'BROKER' ? formData.profile?.serviceAreas : undefined,
+          specialties: formData.role === 'BROKER' ? formData.profile?.specialties : undefined
+        }
+      }
+      await updateUser({ id, data: payload }).unwrap()
       router.push('/users')
     } catch (err: unknown) {
       const message =
         err && typeof err === 'object' && 'data' in err
-          ? (err.data as { message?: string })?.message ?? 'Operation failed'
+          ? ((err.data as { message?: string })?.message ?? 'Operation failed')
           : 'Operation failed'
       setError(message)
     }
@@ -191,6 +206,82 @@ const UserForm = ({ id }: UserFormProps) => {
                   <MenuItem value='false'>Inactive</MenuItem>
                 </TextField>
               </Grid>
+
+              {formData.role === 'BROKER' && (
+                <>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={3}
+                      label='Bio'
+                      placeholder='Broker biography...'
+                      value={formData.profile?.bio ?? ''}
+                      onChange={e =>
+                        setFormData(prev => ({
+                          ...prev,
+                          profile: { ...(prev.profile ?? {}), bio: e.target.value }
+                        }))
+                      }
+                      sx={inputSx}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Autocomplete
+                      multiple
+                      freeSolo
+                      options={[]}
+                      value={formData.profile?.serviceAreas ?? []}
+                      onChange={(_, newValue) =>
+                        setFormData(prev => ({
+                          ...prev,
+                          profile: { ...(prev.profile ?? {}), serviceAreas: newValue as string[] }
+                        }))
+                      }
+                      renderInput={params => (
+                        <TextField
+                          {...params}
+                          label='Service Areas'
+                          placeholder='Add areas and press Enter'
+                          sx={inputSx}
+                        />
+                      )}
+                      renderTags={(value, getTagProps) =>
+                        value.map((option, index) => (
+                          <Chip label={option} size='small' {...getTagProps({ index })} key={index} />
+                        ))
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Autocomplete
+                      multiple
+                      freeSolo
+                      options={[]}
+                      value={formData.profile?.specialties ?? []}
+                      onChange={(_, newValue) =>
+                        setFormData(prev => ({
+                          ...prev,
+                          profile: { ...(prev.profile ?? {}), specialties: newValue as string[] }
+                        }))
+                      }
+                      renderInput={params => (
+                        <TextField
+                          {...params}
+                          label='Specialties'
+                          placeholder='Add specialties and press Enter'
+                          sx={inputSx}
+                        />
+                      )}
+                      renderTags={(value, getTagProps) =>
+                        value.map((option, index) => (
+                          <Chip label={option} size='small' {...getTagProps({ index })} key={index} />
+                        ))
+                      }
+                    />
+                  </Grid>
+                </>
+              )}
             </Grid>
           </Box>
 
@@ -215,4 +306,3 @@ const UserForm = ({ id }: UserFormProps) => {
 }
 
 export default UserForm
-

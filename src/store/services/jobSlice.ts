@@ -13,44 +13,50 @@ import {
   UpdateApplicationStatusRequest,
   CreateApplicationRequest
 } from '@/types/job'
-import { createInterviewScheduleRequest, createInterViewScheduleResponse, getInterviewByIdResponse, GetInterviewsResponse, InterviewStatus } from '@/types/interviewSchedule'
+import {
+  createInterviewScheduleRequest,
+  createInterViewScheduleResponse,
+  getInterviewByIdResponse,
+  GetInterviewsResponse,
+  InterviewStatus
+} from '@/types/interviewSchedule'
 
 export interface GetJobsParams {
-  city?: string 
+  city?: string
   state?: string
   employmentType?: EmploymentType
+  experience?: string
+  salary?: string
+  education?: string
+  jobLevel?: string
   search?: string
   page?: number
   limit?: number
 }
 
 export interface GetInterViewParams {
-  jobId?: string;
-  applicantId?: string;
-  status?: InterviewStatus;
-  page?: number;
-  limit?: number;
+  jobId?: string
+  applicantId?: string
+  status?: InterviewStatus
+  page?: number
+  limit?: number
 }
 
 const jobsApiSlice = apiSlice.injectEndpoints({
   endpoints: builder => ({
-
     getJobPosts: builder.query<getJobsResponse, GetJobsParams | void>({
-      query: (params) => {
+      query: params => {
         const p: GetJobsParams = params ?? {}
-        const { city,state, employmentType, search, page = 1, limit = 10 } = p
+        const { city, state, employmentType, experience, salary, education, jobLevel, search, page = 1, limit = 10 } = p
         return {
           url: `${JOBS_URL}`,
           method: 'GET',
-          params: { city,state, employmentType, search, page, limit }
+          params: { city, state, employmentType, experience, salary, education, jobLevel, search, page, limit }
         }
       },
       providesTags: result =>
         result?.data?.jobs
-          ? [
-              ...result.data.jobs.map(({ _id }) => ({ type: 'Jobs' as const, id: _id })),
-              { type: 'Jobs', id: 'LIST' }
-            ]
+          ? [...result.data.jobs.map(({ _id }) => ({ type: 'Jobs' as const, id: _id })), { type: 'Jobs', id: 'LIST' }]
           : [{ type: 'Jobs', id: 'LIST' }]
     }),
 
@@ -65,10 +71,10 @@ const jobsApiSlice = apiSlice.injectEndpoints({
     createJobPost: builder.mutation<createJobPostResponse, createJobPostRequest>({
       query: data => ({
         url: `${JOBS_URL}`,
-        method: "POST",
+        method: 'POST',
         body: data
       }),
-      invalidatesTags: [{type: 'Jobs', id: 'LIST'}]
+      invalidatesTags: [{ type: 'Jobs', id: 'LIST' }]
     }),
 
     updateJobPost: builder.mutation<createJobPostResponse, { id: string; data: createJobPostRequest }>({
@@ -77,7 +83,10 @@ const jobsApiSlice = apiSlice.injectEndpoints({
         method: 'PUT',
         body: data
       }),
-      invalidatesTags: (_, __, { id }) => [{ type: 'Jobs', id }, { type: 'Jobs', id: 'LIST' }]
+      invalidatesTags: (_, __, { id }) => [
+        { type: 'Jobs', id },
+        { type: 'Jobs', id: 'LIST' }
+      ]
     }),
 
     deleteJobPost: builder.mutation<{ success: boolean; message: string }, string>({
@@ -85,7 +94,10 @@ const jobsApiSlice = apiSlice.injectEndpoints({
         url: `${JOBS_URL}/${id}/delete`,
         method: 'PATCH'
       }),
-      invalidatesTags: (_, __, id) => [{ type: 'Jobs', id }, { type: 'Jobs', id: 'LIST' }]
+      invalidatesTags: (_, __, id) => [
+        { type: 'Jobs', id },
+        { type: 'Jobs', id: 'LIST' }
+      ]
     }),
 
     applyJob: builder.mutation<applyJobResponse, CreateApplicationRequest>({
@@ -107,7 +119,7 @@ const jobsApiSlice = apiSlice.injectEndpoints({
           body
         }
       },
-      invalidatesTags: [{type: 'Jobs', id: 'LIST'}]
+      invalidatesTags: [{ type: 'Jobs', id: 'LIST' }]
     }),
 
     requestEmployerAccess: builder.mutation<RequestEmployerAccessResponse, RequestEmployerAccessRequest>({
@@ -118,7 +130,10 @@ const jobsApiSlice = apiSlice.injectEndpoints({
       })
     }),
 
-    getJobApplications: builder.query<GetApplicationsResponse, { jobId: string; status?: string; page?: number; limit?: number }>({
+    getJobApplications: builder.query<
+      GetApplicationsResponse,
+      { jobId: string; status?: string; page?: number; limit?: number }
+    >({
       query: ({ jobId, status, page = 1, limit = 10 }) => ({
         url: `${JOBS_URL}/${jobId}/applications`,
         method: 'GET',
@@ -133,7 +148,10 @@ const jobsApiSlice = apiSlice.injectEndpoints({
           : [{ type: 'Jobs', id: 'APPLICATIONS' }]
     }),
 
-    getMyJobApplications: builder.query<GetApplicationsResponse, { status?: string; page?: number; limit?: number } | void>({
+    getMyJobApplications: builder.query<
+      GetApplicationsResponse,
+      { status?: string; page?: number; limit?: number } | void
+    >({
       query: params => {
         const p = params ?? {}
         const { status, page = 1, limit = 10 } = p
@@ -152,22 +170,28 @@ const jobsApiSlice = apiSlice.injectEndpoints({
           : [{ type: 'Jobs', id: 'MY_APPLICATIONS' }]
     }),
 
-    updateApplicationStatus: builder.mutation<GetApplicationsResponse['data']['applications'][number], { id: string; data: UpdateApplicationStatusRequest }>({
+    updateApplicationStatus: builder.mutation<
+      GetApplicationsResponse['data']['applications'][number],
+      { id: string; data: UpdateApplicationStatusRequest }
+    >({
       query: ({ id, data }) => ({
         url: `${JOBS_URL}/applications/${id}/status`,
         method: 'PUT',
         body: data
       }),
-      invalidatesTags: [{ type: 'Jobs', id: 'APPLICATIONS' }, { type: 'Jobs', id: 'MY_APPLICATIONS' }]
+      invalidatesTags: [
+        { type: 'Jobs', id: 'APPLICATIONS' },
+        { type: 'Jobs', id: 'MY_APPLICATIONS' }
+      ]
     }),
 
     createInterviewSchedule: builder.mutation<createInterViewScheduleResponse, createInterviewScheduleRequest>({
       query: data => ({
         url: `${JOBS_URL}/interview/schedule`,
-        method: "POST",
+        method: 'POST',
         body: data
       }),
-      invalidatesTags: [{type: 'InterviewSchedules', id: 'LIST'}]
+      invalidatesTags: [{ type: 'InterviewSchedules', id: 'LIST' }]
     }),
 
     getInterviews: builder.query<GetInterviewsResponse, GetInterViewParams | void>({
@@ -181,7 +205,12 @@ const jobsApiSlice = apiSlice.injectEndpoints({
         }
       },
       providesTags: result =>
-        result?.data?.interviews ? [...result.data.interviews.map(({ _id }) => ({ type: 'InterviewSchedules' as const, id: _id })), { type: 'InterviewSchedules', id: 'LIST' }] : [{ type: 'InterviewSchedules', id: 'LIST' }]
+        result?.data?.interviews
+          ? [
+              ...result.data.interviews.map(({ _id }) => ({ type: 'InterviewSchedules' as const, id: _id })),
+              { type: 'InterviewSchedules', id: 'LIST' }
+            ]
+          : [{ type: 'InterviewSchedules', id: 'LIST' }]
     }),
 
     getInterviewById: builder.query<getInterviewByIdResponse, string>({
@@ -192,13 +221,19 @@ const jobsApiSlice = apiSlice.injectEndpoints({
       providesTags: (_, __, id) => [{ type: 'InterviewSchedules', id }]
     }),
 
-    updateInterview: builder.mutation<createInterViewScheduleResponse, { id: string; data: createInterviewScheduleRequest }>({
+    updateInterview: builder.mutation<
+      createInterViewScheduleResponse,
+      { id: string; data: createInterviewScheduleRequest }
+    >({
       query: ({ id, data }) => ({
         url: `${JOBS_URL}/interviews/${id}`,
         method: 'PUT',
         body: data
       }),
-      invalidatesTags: (_, __, { id }) => [{ type: 'InterviewSchedules', id }, { type: 'InterviewSchedules', id: 'LIST' }]
+      invalidatesTags: (_, __, { id }) => [
+        { type: 'InterviewSchedules', id },
+        { type: 'InterviewSchedules', id: 'LIST' }
+      ]
     }),
 
     deleteInterview: builder.mutation<{ success: boolean; message: string }, string>({
@@ -206,9 +241,11 @@ const jobsApiSlice = apiSlice.injectEndpoints({
         url: `${JOBS_URL}/interviews/${id}/delete`,
         method: 'PATCH'
       }),
-      invalidatesTags: (_, __, id) => [{ type: 'InterviewSchedules', id }, { type: 'InterviewSchedules', id: 'LIST' }]
-    }),
-   
+      invalidatesTags: (_, __, id) => [
+        { type: 'InterviewSchedules', id },
+        { type: 'InterviewSchedules', id: 'LIST' }
+      ]
+    })
   })
 })
 
@@ -227,5 +264,5 @@ export const {
   useGetInterviewsQuery,
   useGetInterviewByIdQuery,
   useUpdateInterviewMutation,
-  useDeleteInterviewMutation,
+  useDeleteInterviewMutation
 } = jobsApiSlice

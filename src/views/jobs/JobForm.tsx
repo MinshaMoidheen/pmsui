@@ -22,15 +22,11 @@ import Divider from '@mui/material/Divider'
 import Box from '@mui/material/Box'
 
 // Store Imports
-import {
-  useCreateJobPostMutation,
-  useUpdateJobPostMutation,
-  useGetJobByIdQuery
-} from '@/store/services/jobSlice'
+import { useCreateJobPostMutation, useUpdateJobPostMutation, useGetJobByIdQuery } from '@/store/services/jobSlice'
 
 // Types & Schema
 import type { createJobPostRequest } from '@/types/job'
-import { EMPLOYMENT_TYPE_OPTIONS } from '@/types/job'
+import { EMPLOYMENT_TYPE_OPTIONS, EDUCATION_OPTIONS, JOB_LEVEL_OPTIONS, EXPERIENCE_OPTIONS } from '@/types/job'
 import { jobFormSchema } from '@/schemas/jobSchema'
 
 const inputSx = {
@@ -51,6 +47,9 @@ const defaultFormValues: createJobPostRequest = {
   description: '',
   companyName: '',
   employmentType: 'FULL_TIME',
+  experience: '',
+  education: '',
+  jobLevel: '',
   location: {
     city: '',
     state: '',
@@ -94,6 +93,9 @@ const JobForm = ({ id }: JobFormProps) => {
         description: job.description ?? '',
         companyName: job.companyName,
         employmentType: job.employmentType,
+        experience: job.experience ?? '',
+        education: job.education ?? '',
+        jobLevel: job.jobLevel ?? '',
         location: {
           city: job.location?.city ?? '',
           state: job.location?.state ?? '',
@@ -168,10 +170,7 @@ const JobForm = ({ id }: JobFormProps) => {
         ...formData.contact,
         email: formData.contact.email || ''
       },
-      salary:
-        formData.salary && (formData.salary.min || formData.salary.max)
-          ? formData.salary
-          : undefined
+      salary: formData.salary && (formData.salary.min || formData.salary.max) ? formData.salary : undefined
     })
 
     if (!result.success) {
@@ -190,8 +189,18 @@ const JobForm = ({ id }: JobFormProps) => {
       description: result.data.description.trim(),
       companyName: result.data.companyName.trim(),
       employmentType: result.data.employmentType,
+      experience: result.data.experience,
+      education: result.data.education,
+      jobLevel: result.data.jobLevel,
       location: result.data.location,
-      salary: result.data.salary,
+      salary: result.data.salary
+        ? {
+            min: result.data.salary.min ?? 0,
+            max: result.data.salary.max ?? 0,
+            currency: result.data.salary.currency ?? 'INR',
+            period: result.data.salary.period ?? 'per month'
+          }
+        : undefined,
       requirements: result.data.requirements ?? [],
       responsibilities: result.data.responsibilities ?? [],
       contact: {
@@ -213,7 +222,7 @@ const JobForm = ({ id }: JobFormProps) => {
     } catch (err: unknown) {
       const message =
         err && typeof err === 'object' && 'data' in err
-          ? (err.data as { message?: string })?.message ?? 'Operation failed'
+          ? ((err.data as { message?: string })?.message ?? 'Operation failed')
           : 'Operation failed'
       setError(message)
     }
@@ -281,7 +290,7 @@ const JobForm = ({ id }: JobFormProps) => {
                   sx={inputSx}
                 />
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid item xs={4} md={3}>
                 <TextField
                   fullWidth
                   select
@@ -293,6 +302,63 @@ const JobForm = ({ id }: JobFormProps) => {
                   {EMPLOYMENT_TYPE_OPTIONS.map(et => (
                     <MenuItem key={et.value} value={et.value}>
                       {et.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={4} md={3}>
+                <TextField
+                  fullWidth
+                  select
+                  label='Experience'
+                  value={formData.experience}
+                  onChange={e => updateField('experience', e.target.value)}
+                  error={!!getError('experience')}
+                  helperText={getError('experience')}
+                  sx={inputSx}
+                >
+                  <MenuItem value=''>Select Experience</MenuItem>
+                  {EXPERIENCE_OPTIONS.map(opt => (
+                    <MenuItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={4} md={3}>
+                <TextField
+                  fullWidth
+                  select
+                  label='Education'
+                  value={formData.education}
+                  onChange={e => updateField('education', e.target.value)}
+                  error={!!getError('education')}
+                  helperText={getError('education')}
+                  sx={inputSx}
+                >
+                  <MenuItem value=''>Select Education</MenuItem>
+                  {EDUCATION_OPTIONS.map(opt => (
+                    <MenuItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={4} md={3}>
+                <TextField
+                  fullWidth
+                  select
+                  label='Job Level'
+                  value={formData.jobLevel}
+                  onChange={e => updateField('jobLevel', e.target.value)}
+                  error={!!getError('jobLevel')}
+                  helperText={getError('jobLevel')}
+                  sx={inputSx}
+                >
+                  <MenuItem value=''>Select Job Level</MenuItem>
+                  {JOB_LEVEL_OPTIONS.map(opt => (
+                    <MenuItem key={opt.value} value={opt.value}>
+                      {opt.label}
                     </MenuItem>
                   ))}
                 </TextField>
@@ -550,4 +616,3 @@ const JobForm = ({ id }: JobFormProps) => {
 }
 
 export default JobForm
-
